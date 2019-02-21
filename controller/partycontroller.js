@@ -8,10 +8,9 @@ import Schema from '../helpers/Validationparty';
 
 const controllers = {};
 
-// fetch a party by id
-const GetPartById = (req, res) => {
-  const partyId = req.params.id;
-//send party
+   // fetch a party by id  method
+    const GetPartById = (req, res) => {
+      const partyId = req.params.id;
   const Party = execute(queries.getSpecificParty,[partyId]);
   Party
     .then((response) => {
@@ -26,7 +25,9 @@ const GetPartById = (req, res) => {
     .catch(error => console.log(error));
 };
 
-// create party
+
+
+// create party method 
 const createParty = (req, res) => {
   const {
     name,hqaddress,logourl,
@@ -40,7 +41,7 @@ const createParty = (req, res) => {
     
      Schema.partySchema,
   );
-  if (error !== null) { 
+  if (error) { 
     res.status(400).send({ error: error.details[0].message });
   } else {
     const id = uuidv1();
@@ -52,7 +53,6 @@ const createParty = (req, res) => {
       partyinsert.logourl,
     ]);
     
-    console.log(promise);
     promise
     .then((response) => {
       if (response.length >= 1) {
@@ -70,7 +70,8 @@ const createParty = (req, res) => {
 }
 };
 
-// fetch all parties
+
+// fetch all parties method
 const AllParty = (req, res) => {
   const getallparties = execute(queries.getallParty);
      
@@ -83,13 +84,15 @@ const AllParty = (req, res) => {
           response });
       } else {
         res.send({ 
-          parties:[],
+          parties:[response],
           message: 'There is no party at the moment.' });
       }
     })
     .catch(error => console.log(error));
   };
 
+
+  //update a party method
 const updateparty = (req, res) => {
   const { id } = req.params;
    const {
@@ -123,7 +126,7 @@ const updateparty = (req, res) => {
 // Delete a party .
 const deleteparty = (req, res) => {
   const partyId = req.params.id;
-//send party
+//delete party
 const deleteparty = execute(queries.deleteParty,[partyId]);
   deleteparty
     .then((response) => {
