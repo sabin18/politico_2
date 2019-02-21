@@ -1,133 +1,143 @@
-import offices from "../db/office";
-import office from "../helpers/validationoffice";
-import moment from "moment";
+// src/usingDB/controllers/Reflection.js
+import joi from 'joi';
+import uuidv1 from 'uuid/v1';
+import office from '../models/officemodel';
+import queries from '../db/Queries';
+import execute from '../src/connection';
+import Schema from '../helpers/Validationoffice';
 
-class officesController{
+const controllers = {};
 
-static getoffice(req, res) {
+// fetch an office by id
+const GetofficeById = (req, res) => {
+  const officeId = req.params.id;
+//send office
+  const office = execute(queries.getSpecificoffice,[officeId]);
+  office
+    .then((response) => {
+      // send it.
+      if (response.length >=1) {
+        res.status(200).send(response[0]);
+      } else {
+        // send the error on page
+        res.status(404).send({ message: 'sorry no office  found it is empty' });
+      }
+    })
+    .catch(error => console.log(error));
+};
 
-    return res.json({
-      status:200,  
-      message: "List of all offices",
-      office: offices
-    });
-
-}
-
-//create political office
-  
-static createoffice(req, res) {
-    const id = parseInt(offices.length) + 1;
-    const {type,name}= req.body;
-    const newoffice = {
-      created_at: moment.utc().format(),
-      id,
-      type,
+// create an office
+const createoffice = (req, res) => {
+  const {
+    name,type
+  } = req.body;
+  const { error, value } = joi.validate(
+    {
       name,
-    };
-
-    const{
-      error
-       }=office(req.body);
-       error? res.send({
-       status:400,
-        error:error.details[0].message
-        }):null;
-      
-      const existoffice=offices.find(field => field.name==req.body.name);
-
-      if (existoffice)return res.send({
-        status: 400,
-        error:"please use other name this office name already exist!"
-      });
-      
-
-    offices.push(newoffice);
-    return res.status(200).json({ 
-      status:200, 
-      message: "created a new office"
-    });
-  }
-
-  // get office by id
-static getOneoffice(req, res) {
-    const { id } = req.params;
-    const office = offices.find(oneoffice => oneoffice.id == id);
-    if (office) {
-      return res.status(200).json({
-        status:200,
-        message: "one office found",
-        onePost: office
-      });
-    } else {
-      return res.status(400).json({
-        status:400,
-        error: "no office found with that id"
-      });
-    }
-  }
-  
-  
-  //update an  office
-
-  static updateoffice(req, res) {
-    const { id } = req.params;
-    const officeupdate = offices.find(updatePost => updatePost.id == id);
+      type,
+    },
     
-    if (officeupdate) {
-
-        const{
-            error
-             }=office(req.body);
-             error? res.send({
-             status:400,
-              error:error.details[0].message
-              }):null;
-            
-            const existoffice=offices.find(field => field.name==req.body.name);
+     Schema.officeSchema,
+  );
+  if (error !== null) { 
+    res.status(400).send({ error: error.details[0].message });
+  } else {
+    const id = uuidv1();
+    const officeinsert = new office(id, name,type);
+    const promise = execute(queries.insertoffice, [
+      officeinsert.id,
+      officeinsert.name,
+      officeinsert.type,
       
-            if (existoffice)return res.send({
-              status: 400,
-              error:"please use other name this office name already exist!"
-            });
+    ]);
+    
+    console.log(promise);
+    promise
+    .then((response) => {
+      if (response.length >= 1) {
+        res.status(201).send({
+          message: 'The office was successfully created',
+          response: response[0],
+        });
 
-      (officeupdate.name = req.body.name),(officeupdate.type=req.body.type),(officeupdate.body = req.body.body);
-      return res.status(200).json({
-        status:200,
-        message: "successfully updated",
-        updateoffice: offices
-      });
-    } else {
-      res.status(404).json({
-        status:404,
-        error: "office can't be updated because we can't find that office"
-      });
-    }
-  }
-
-
-
-static deleteoffice(req, res) {
-    let { id } = req.params;
-    const findoffice = offices.findIndex(post => {
-      return post.id == parseInt(id, 10);
-    });
-    if (findoffice >-1) {
-      offices.splice(findoffice,1);
-      const newoffice = offices.filter(post => {
-        return findoffice;
-      });
-      res.status(200).json({
-        status:200,
-        message: "office successfully deleted",
-        office: newoffice
-      });
-    } else {
-      res.status(404).json({
-        status:404,
-        error: "could not find that  office"
-      });
-    }
-  }
+      } else {
+        res.send({ error: 'Duplicate key error' });
+      }
+    })
+    .catch(error => res.status(400).send(error));
 }
-export default officesController;
+};
+
+// fetch all parties
+const Alloffice = (req, res) => {
+  const getalloffices = execute(queries.getalloffice);
+     
+  getalloffices
+    .then((response) => {
+      if (response) {
+        res.send({ 
+          status:200,
+          offices:
+          response });
+      } else {
+        res.send({ 
+          offices:[],
+          message: 'There is no office at the moment.' });
+      }
+    })
+    .catch(error => console.log(error));
+  };
+
+const updateoffice = (req, res) => {
+  const { id } = req.params;
+   const {
+    name,type
+  } = req.body;
+  const { error, value } = joi.validate(
+    {
+      name,
+      type,
+    },
+     Schema.officeSchema,
+  );
+  if (error) {
+    res.status(400).send({ error: error.details[0].message });
+  } else {
+    const changeoffice = execute(queries.Updateoffice,[name,type,id]);
+    changeoffice
+      .then((response) => {
+        if (response) {
+          const message = 'The office was updated successfully';
+          res.status(200).send({ message, response: response[0] });
+        } else {
+          res.status(404).send({ error: 'No office with that id' });
+        }
+      })
+      .catch(err => res.status(400).send({ err }));
+  }
+};
+
+// Delete an office.
+const deleteoffice = (req, res) => {
+  const officeId = req.params.id;
+//send office
+const deleteoffice = execute(queries.deleteoffice,[officeId]);
+  deleteoffice
+    .then((response) => {
+      res.status(200).send({ message: 'office deleted successfully', response });
+    })
+    .catch((error) => {
+      res.status(400).send({ error:'office can not be deleted' });
+
+    });
+};
+
+
+controllers.GetofficeById = GetofficeById;
+controllers.createoffice = createoffice;
+controllers.Alloffice = Alloffice;
+controllers.updateoffice = updateoffice;
+controllers.deleteoffice = deleteoffice;
+
+
+export default controllers;
