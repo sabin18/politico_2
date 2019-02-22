@@ -29,7 +29,7 @@ const accessTokenRequired = (req, res, next) => {
       res.status(400).send({ error: 'Token expired' });
     } else {
       req.body.userId = decodedToken.sub.userId;
-      req.body.userType = decodedToken.sub.userType;
+      req.body.isadmin = decodedToken.sub.isadmin;
       next();
     }
   }
@@ -44,8 +44,8 @@ const adminTokenRequired = (req, res, next) => {
       res.status(400).send({ error: 'Token expired' });
     } else {
       req.body.userId = decodedToken.sub.userId;
-      req.body.usertype = decodedToken.sub.userType;
-      if (req.body.usertype === 'Admin') {
+      req.body.isadmin = decodedToken.sub.isadmin;
+      if (req.body.isadmin === 'true') {
         next();
       } else {
         res.status(403).send({ error: 'Not authorized to this page' });

@@ -82,7 +82,6 @@ const createUser = (req, res) => {
 // get a user
 const getUser = (req, res) => {
   const id = req.params.id;
-  // const specificUser = users.find(item => item.id === id);
   const specificUser = execute('SELECT * FROM users WHERE id =$1', [id]);
   specificUser
     .then((response) => {

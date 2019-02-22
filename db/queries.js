@@ -13,11 +13,12 @@ const createOfficeTable = 'CREATE TABLE IF NOT EXISTS office(id UUID(200) PRIMAR
 
 
 // Create table for candidates
-const createCandidatesTable = "CREATE TABLE IF NOT EXISTS office(id UUID(200) PRIMARY KEY,name VARCHAR(70) NOT NULL,type VARCHAR(70) NOT NULL)";
+const createCandidatesTable = "CREATE TABLE IF NOT EXISTS candidates(id UUID(200) PRIMARY KEY,office VARCHAR(70) NOT NULL,candidate VARCHAR(70) NOT NULL)";
 
 if (require.main === module) {
   execute(createPartiesTable);
   execute(createusersTable);
+  execute(createCandidatesTable);
 }
 
 
@@ -38,8 +39,14 @@ const deleteParty='DELETE FROM parties WHERE id =$1 ';
  //insert office into the database
 const insertoffice = 'INSERT INTO office (id, name,type) VALUES($1,$2,$3) RETURNING * ';
 
+// //insert office into candidates
+const insertcandidates = 'INSERT INTO candidates (office,candidates) VALUES($1,$2) RETURNING * ';
+
 // Pull out an office from a database
 const getSpecificoffice = 'SELECT * FROM office WHERE id =$1 ';
+
+// Pull out a user from a database
+const getoneuser = 'SELECT * FROM user WHERE id =$1 ';
 
 const getalloffice = 'SELECT * FROM office ';
 
@@ -60,6 +67,8 @@ const checkUser = 'SELECT * FROM users WHERE email = $1';
 sqlQueries.createPartiesTable = createPartiesTable;
 
 sqlQueries.createusersTable = createusersTable;
+
+sqlQueries.createCandidatesTable = createCandidatesTable;
 
 sqlQueries.UpdateParty = UpdateParty;
 
@@ -88,6 +97,10 @@ sqlQueries.getalloffice=getalloffice;
 sqlQueries.Updateoffice=Updateoffice;
 
 sqlQueries.deleteoffice=deleteoffice;
+
+sqlQueries.getoneuser=getoneuser;
+
+sqlQueries.insertcandidates=insertcandidates;
 
 
 export default sqlQueries;

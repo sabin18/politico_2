@@ -15,18 +15,16 @@ const GetofficeById = (req, res) => {
   const office = execute(queries.getSpecificoffice,[officeId]);
   office
     .then((response) => {
-      // send it.
       if (response.length >=1) {
         res.status(200).send(response[0]);
       } else {
-        // send the error on page
         res.status(404).send({ message: 'sorry no office  found it is empty' });
       }
     })
     .catch(error => console.log(error));
 };
 
-// create an office
+// create an office methode
 const createoffice = (req, res) => {
   const {
     name,type
@@ -87,7 +85,9 @@ const Alloffice = (req, res) => {
     })
     .catch(error => console.log(error));
   };
-
+ 
+ 
+  //update an office
 const updateoffice = (req, res) => {
   const { id } = req.params;
    const {
@@ -123,16 +123,81 @@ const deleteoffice = (req, res) => {
 //send office
 const deleteoffice = execute(queries.deleteoffice,[officeId]);
   deleteoffice
+  .then((response) => {
+    if (response) {
+      const message = 'The office was updated successfully';
+      res.status(200).send({ message, response: response[0] });
+    } 
+    
+    else {
+      res.status(404).send({ error: 'No office with that id' });
+    }
+  })
+  .catch(err => res.status(400).send({ err }));
+}
+//create a candidate for an office
+const createcandidates = (req, res) => {
+  const{id}=req.params.id
+  const {party,user } = req.body;
+  const specificUser = execute(queries.getSpecificParty,[office]);
+  specificUser
     .then((response) => {
-      res.status(200).send({ message: 'office deleted successfully', response });
+      if (response.length > 0) {
+        const specificUser = execute(queries.checkUser,[user]);
+      specificUser
+      if (response.length > 0) {
+        const candidatecheck = execute('SELECT * FROM candidates WHERE office=$1 and party=$2 and candidate=$3)',
+        [
+			id,
+			party,
+			user,
+		]);
+        candidatecheck
+        if (response.length > 0) {
+          try {
+            execute('INSERT INTO candidates(office, candidates, party) VALUES($1,$2,$3)',
+            [
+              id,
+              party,
+              user
+            ]);
+            return res.status(201).json({
+              status: 201,
+              data: [
+                {
+                  office: id,
+                  user: candidate.user
+                }
+              ]
+            });
+          } catch (error) {
+            return res.status(404).json({
+              status: 404,
+              error: error
+            });
+          }
+
+        }
+        
+        else {
+          res.status(400).send({ error: 'the party do not exist' });
+        }
+      } 
+      
+      else {
+        res.status(400).send({ error: 'the user do not exist' });
+      }
+    }
+      else {
+        res.status(400).send({ error: 'candidates already exist' });
+      }
     })
     .catch((error) => {
-      res.status(400).send({ error:'office can not be deleted' });
-
+      res.status(400).send({ error:'invalid inputs' });
     });
 };
 
-
+controllers.createcandidates = createcandidates;
 controllers.GetofficeById = GetofficeById;
 controllers.createoffice = createoffice;
 controllers.Alloffice = Alloffice;

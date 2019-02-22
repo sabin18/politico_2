@@ -19,7 +19,7 @@ const controllers = {};
         res.status(200).send(response[0]);
       } else {
         // send the error on page
-        res.status(404).send({ message: 'sorry no party  found it is empty' });
+        res.status(404).send({ message:'sorry no party  found it is empty' });
       }
     })
     .catch(error => console.log(error));
@@ -116,7 +116,7 @@ const updateparty = (req, res) => {
           const message = 'The party was updated successfully';
           res.status(200).send({ message, response: response[0] });
         } else {
-          res.status(404).send({ error: 'it can not update the party'});
+          res.status(404).send({ error: 'it can not find  that  party'});
         }
       })
       .catch(err => {res.status(400).send({ err }); });
@@ -129,14 +129,14 @@ const deleteparty = (req, res) => {
 //delete party
 const deleteparty = execute(queries.deleteParty,[partyId]);
   deleteparty
-    .then((response) => {
-      res.status(200).send({ message: 'party deleted successfully', response });
-    })
-    .catch((error) => {
-      res.status(400).send({ error:'party can not be deleted' });
-
-    });
+  .then((response) => {
+    res.status(200).send({ message: 'Users deleted successfully', response });
+  })
+  .catch((error) => {
+    res.status(400).send({ error });
+  });
 };
+
 controllers.GetPartById = GetPartById;
 controllers.createParty = createParty;
 controllers.AllParty = AllParty;

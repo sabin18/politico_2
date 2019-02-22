@@ -8,13 +8,7 @@ import 'babel-polyfill';
 dotenv.config();
 // instantiate the connection string
 // const connectionString
-const pool = new Pool({
-  user:'postgres' ,
-  host:'localhost',
-  database:'postgres',
-  port:'5432',
-  password: '1234',
-});
+const pool = new Pool({connectionString: process.env.DATABASE_URL});
 
 const connect = async () => pool.connect();
 

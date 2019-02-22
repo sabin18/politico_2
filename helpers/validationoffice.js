@@ -1,22 +1,12 @@
-import Joi from 'joi';
 
-const office = (field)=>{
+import joi from 'joi';
 
-    const schema={
+const officeSchema = joi.object().keys({
+  name: joi.string().min(3).max(15)
+    .required(),
+    type: joi.string().min(3).max(30).valid(['federal', 'legislative','state','local government'])
+    .required(),
+});
 
-        name:Joi.string().regex(/^[a-zA-Z] |[a-zA-Z] ?[a-zA-Z]+$/).min(2).max(15).required(),
-        type:Joi.string().min(3).max(15).valid(['federal', 'legislative','state','local government']).required().trim(),  
-       
-    }
 
-const options ={
-    language:{
-
-        key:'{{key}}'
-    }
-}
-return Joi.validate(field,schema,options);
-
-}
-
-export default office; 
+export default { officeSchema };
