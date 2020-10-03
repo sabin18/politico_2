@@ -1,172 +1,127 @@
-import parties from "../db/parties";
-import party from "../helpers/validationparty";
+// src/usingDB/controllers/Reflection.js
+import joi from 'joi';
+import uuidv1 from 'uuid/v1';
+import Party from '../models/partymodel';
+import queries from '../db/Queries';
+import execute from '../src/connection';
+import Schema from '../helpers/Validationparty';
 
-class partyController {
+const controllers = {};
 
-    //getting the parties
-    static getparties(req, res){
-    
-      return res.json({
-        status:200,
-        message: "List of all parties",
-        party: parties
-  
-      });
-    }
+// fetch a party by id
+const GetPartById = (req, res) => {
+  const partyId = req.params.id;
+//send party
+  const Party = execute(queries.getSpecificParty,[partyId]);
+  Party
+    .then((response) => {
+      // send it.
+      if (response.length >=1) {
+        res.status(200).send(response[0]);
+      } else {
+        // send the error on page
+        res.status(404).send({ message: 'sorry no party  found it is empty' });
+      }
+    })
+    .catch(error => console.log(error));
+};
 
-
- // create political party
-
-static createparties(req, res) {
-    const id = parseInt(parties.length) + 1;
-    const {name,HQAddress,logourl} = req.body;
-    const newparty = {
-      id,
+// create party
+const createParty = (req, res) => {
+  const {
+    name,hqaddress,logourl,
+  } = req.body;
+  const { error, value } = joi.validate(
+    {
       name,
-      HQAddress,
+      hqaddress,
       logourl,
-    };
-
- const{
-error
- }=party(req.body);
- error? res.send({
- status:400,
-  error:error.details[0].message
-  }):null;
-
-const existparty=parties.find(field => field.name==req.body.name);
-if (existparty) return res.send({
-  status: 400,
-  error:"please use other name this party name already exist"
-});
-
-    parties.push(newparty);
-    return res.status(200).json({  
-      status:200,
-      message: "created a new party"
-    });
-
-  }
-
-//get parties by id
-static getOneparty(req, res) {
-    const { id } = req.params;
-    const party = parties.find(oneparties => oneparties.id == id);
-    if (party) {
-      return res.status(200).json({
-        status:200,
-        message: "one party found",
-        onePost: party
-      });
-    } else {
-      return res.status(404).json({
-        status:404,
-        error: "no party found with that id"
-      });
-    }
-  }
-
-  static updateparty(req, res) {
-    const { id } = req.params;
-    const partyupdate = parties.find(updatePost => updatePost.id == id);
-  
-  
-    if (partyupdate) {
-  
-      const{
-        error
-         }=party(req.body);
-         error? res.send({
-         status:400,
-          error:error.details[0].message
-          }):null;
-  
-      const existparty=parties.find(field => field.name==req.body.name);
-        if (existparty) return res.send({
-          status: 400,
-          error:"please use other name ,this name is same as name you are updating"
-        });
-  
-      (partyupdate.name = req.body.name), (partyupdate.HQAddress=req.body.HQAddress), (partyupdate.logourl=req.body.logourl), (partyupdate.body = req.body.body);
-      return res.status(200).json({
-        status:200,
-        message: "successfully updated",
-        updateParty: party
-      });
-    } else {
-      return res.status(404).json({
-        status:404,
-        error: "party cannot be updated"
-      });
-    }
-  }
-  
-
-//update function (patch)
-static updatepartyname(req, res) {
-    const { id } = req.params;
-    const { name } = req.params;
-    const updateparty = parties.find(updatePost => updatePost.id == id);
-    const updatepartyname = parties.find(updatePost => updatePost.name == name);
-  
+    },
     
-  
-    if (updateparty&&updatepartyname) {
-        
-      const{
-        error
-         }=party(req.body);
-         error? res.send({
-         status:400,
-          error:error.details[0].message
-          }):null;
-  
-        const existparty=parties.find(field => field.name==req.body.name);
-        if (existparty) return res.send({
-          status: 400,
-          error:"please use other name ,this name is same as name you are updating"
+     Schema.partySchema,
+  );
+  if (error !== null) { 
+    res.status(400).send({ error: error.details[0].message });
+  } else {
+    const id = uuidv1();
+    const partyinsert = new Party(id, name,hqaddress,logourl);
+    const promise = execute(queries.insertIntoParty, [
+      partyinsert.id,
+      partyinsert.name,
+      partyinsert.hqaddress,
+      partyinsert.logourl,
+    ]);
+    
+    console.log(promise);
+    promise
+    .then((response) => {
+      if (response.length >= 1) {
+        res.status(201).send({
+          message: 'The party was successfully created',
+          response: response[0],
         });
-  
-      (party.name = req.body.name),(party.body = req.body.body);
-      return res.status(200).json({
-        status:200,
-        message: "party successfully  updated",
-        updatePost: party
-      });
-    } else {
-      return res.status(404).json({
-        status:404,
-        error: "party cannot be updated"
-      });
-    }
-  }
 
-  
-  // delete data functions 
-
-  static deleteparties(req, res) {
-    let { id } = req.params;
-    const findparty = parties.findIndex(post => {
-      return post.id == id;
-    });
-    if (findparty >-1) {
-      parties.splice(findparty,1);
-      const newparty = parties.filter(post => {
-        return post !== findparty;
-      });
-      res.status(200).json({
-        status:200,
-        message: "party successfully deleted",
-        Posts: newparty
-      });
-    } else {
-      res.status(400).json({
-        status:400,
-        error: "could not delete a party"
-      });
-    }
-  }
-
+      } else {
+        res.send({ error: 'Duplicate key error' });
+      }
+    })
+    .catch(error => res.status(400).send(error));
 }
-export default partyController;
+};
+
+// fetch all parties
+const AllParty = (req, res) => {
+  const getallparties = execute(queries.getallParty);
+     
+  getallparties
+    .then((response) => {
+      if (response) {
+        res.send({ 
+          status:200,
+          parties:
+          response });
+      } else {
+        res.send({ 
+          parties:[],
+          message: 'There is no party at the moment.' });
+      }
+    })
+    .catch(error => console.log(error));
+  };
+
+const updateparty = (req, res) => {
+  const { id } = req.params;
+   const {
+    name,hqaddress,logourl
+  } = req.body;
+  const { error, value } = joi.validate(
+    {
+      name,
+      hqaddress,
+      logourl,
+    },
+     Schema.partySchema,
+  );
+  if (error) {
+    res.status(400).send({ error: error.details[0].message });
+  } else {
+    const changeparty = execute(queries.UpdateParty,[name,hqaddress,logourl,id]);
+    changeparty
+      .then((response) => {
+        if (response) {
+          const message = 'The party was updated successfully';
+          res.status(200).send({ message, response: response[0] });
+        } else {
+          res.status(404).send({ error: 'No party with that id' });
+        }
+      })
+      .catch(err => res.status(400).send({ err }));
+  }
+};
+
+controllers.GetPartById = GetPartById;
+controllers.createParty = createParty;
+controllers.AllParty = AllParty;
+controllers.updateparty = updateparty;
+
+export default controllers;
